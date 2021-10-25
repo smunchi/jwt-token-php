@@ -1,0 +1,65 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Authorization using JSON Web Tokens and PHP</title>
+</head>
+
+<body class="text-center">
+  <main class="form-signin">
+    <form method="post" action="authentication.php" id="frmLogin">
+      <input type="text" id="inputEmail" class="form-control" placeholder="Email address or username"/>
+      <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
+      <button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>
+    </form>
+    <button id="btnGetResource">Get current timestamp</button>
+    <span id="currentTimeShow"></span>
+  </main>
+  <script>
+    const store = {};
+    const loginButton = document.querySelector('#frmLogin');
+    const btnGetResource = document.querySelector('#btnGetResource');
+    const form = document.forms[0];
+
+    // Inserts the jwt to the store object
+    store.setJWT = function (data) {
+      this.JWT = data;
+    };
+
+    loginButton.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const res = await fetch('authentication.php', {
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        },
+        body: JSON.stringify({
+          username: form.inputEmail.value,
+          password: form.inputPassword.value
+        })
+      });
+
+      if (res.status >= 200 && res.status <= 299) {
+        const jwt = await res.text();
+        store.setJWT(jwt);
+        loginButton.style.display = 'none';
+        btnGetResource.style.display = 'block';
+      } else {
+        // Handle errors
+        console.log(res.status, res.statusText);
+      }
+    });
+
+    btnGetResource.addEventListener('click', async (e) => {
+      const res = await fetch('response.php', {
+        headers: {
+          'Authorization': `Bearer ${store.JWT}`
+        }
+      });
+      const timeStamp = await res.text();
+      document.write(timeStamp);
+    });
+  </script>
+</body>
+</html>
